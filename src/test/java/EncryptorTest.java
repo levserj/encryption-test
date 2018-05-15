@@ -34,6 +34,7 @@ public class EncryptorTest {
     public void encryptionWithStreamsTest() throws IOException, InterruptedException {
         byte[] rowData = DATA.getBytes("UTF-8");
         File tmp = File.createTempFile("tmpEncryptedByteArray", ".txt");
+        tmp.deleteOnExit();
         OutputStream encryptedOutputStream = encryptor.getOutputStreamAndEncrypt(RAW_KEY, new FileOutputStream(tmp));
         encryptedOutputStream.write(rowData);
         encryptedOutputStream.flush();
@@ -42,6 +43,5 @@ public class EncryptorTest {
         byte[] decrypted = IOUtils.toByteArray(decryptedInputStream);
         assertEquals(DATA, new String(decrypted));
         decryptedInputStream.close();
-        tmp.delete();
     }
 }
