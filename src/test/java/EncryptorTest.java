@@ -42,5 +42,6 @@ public class EncryptorTest {
         byte[] decrypted = IOUtils.toByteArray(decryptedInputStream);
         assertEquals(DATA, new String(decrypted));
         decryptedInputStream.close();
+        tmp.delete();
     }
 }
