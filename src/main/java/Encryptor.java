@@ -8,7 +8,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.security.InvalidKeyException;
 import java.security.Provider;
 import java.security.SecureRandom;
 
@@ -25,7 +24,6 @@ public class Encryptor {
 
     private final SecureRandom secureRandom;
     private final Provider provider;
-    private Cipher cipher;
 
     public Encryptor() {
         this(new SecureRandom(), null);
@@ -51,7 +49,7 @@ public class Encryptor {
             secureRandom.nextBytes(iv);
 
             byte[] encrypted;
-            final Cipher cipher = getCipher(ALGORITHM_1);
+            final Cipher cipher = Cipher.getInstance(ALGORITHM_1);
 
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
             encrypted = cipher.doFinal(rawData);
@@ -78,7 +76,7 @@ public class Encryptor {
             byte[] encrypted = new byte[byteBuffer.remaining()];
             byteBuffer.get(encrypted);
 
-            final Cipher cipher = getCipher(ALGORITHM_1);
+            final Cipher cipher = Cipher.getInstance(ALGORITHM_1);
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
 
             return cipher.doFinal(encrypted);
@@ -89,39 +87,24 @@ public class Encryptor {
     }
 
     public InputStream getInputStreamAndDecrypt(byte[] rawEncryptionKey, InputStream is) {
-        final Cipher cipher = getCipher(ALGORITHM_2);
         try {
+            final Cipher cipher = Cipher.getInstance(ALGORITHM_2);
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"));
             return new CipherInputStream(is, cipher);
-        } catch (InvalidKeyException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to encrypt. Exception : " + e.getMessage());
         }
         return null;
     }
 
     public OutputStream getOutputStreamAndEncrypt(byte[] rawEncryptionKey, OutputStream os) {
-        final Cipher cipher = getCipher(ALGORITHM_2);
         try {
+            final Cipher cipher = Cipher.getInstance(ALGORITHM_2);
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"));
             return new CipherOutputStream(os, cipher);
-        } catch (InvalidKeyException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to decrypt. Exception : " + e.getMessage());
         }
         return null;
-    }
-
-    private Cipher getCipher(String algoritm) {
-        if (cipher == null) {
-            try {
-                if (provider != null) {
-                    cipher = Cipher.getInstance(algoritm, provider);
-                } else {
-                    cipher = Cipher.getInstance(algoritm);
-                }
-            } catch (Exception e) {
-                LOGGER.error("could not get cipher instance. Exception : " + e.getMessage());
-            }
-        }
-        return cipher;
     }
 }
