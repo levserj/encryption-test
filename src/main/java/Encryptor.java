@@ -3,11 +3,13 @@ import org.apache.log4j.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.SecureRandom;
 
@@ -23,19 +25,21 @@ public class Encryptor {
     private static final int IV_LENGTH_BYTE = 12;
 
     private final SecureRandom secureRandom;
-    private final Provider provider;
+    private Cipher encryptStream;
+    private Cipher decryptStream;
 
-    public Encryptor() {
+    public Encryptor() throws NoSuchAlgorithmException, NoSuchPaddingException {
         this(new SecureRandom(), null);
     }
 
-    public Encryptor(SecureRandom secureRandom) {
+    public Encryptor(SecureRandom secureRandom) throws NoSuchAlgorithmException, NoSuchPaddingException {
         this(secureRandom, null);
     }
 
-    public Encryptor(SecureRandom secureRandom, Provider provider) {
+    public Encryptor(SecureRandom secureRandom, Provider provider) throws NoSuchPaddingException, NoSuchAlgorithmException {
         this.secureRandom = secureRandom;
-        this.provider = provider;
+        encryptStream = Cipher.getInstance(ALGORITHM_2);
+        decryptStream = Cipher.getInstance(ALGORITHM_2);
     }
 
 
@@ -88,9 +92,8 @@ public class Encryptor {
 
     public InputStream getInputStreamAndDecrypt(byte[] rawEncryptionKey, InputStream is) {
         try {
-            final Cipher cipher = Cipher.getInstance(ALGORITHM_2);
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"));
-            return new CipherInputStream(is, cipher);
+            encryptStream.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"));
+            return new CipherInputStream(is, encryptStream);
         } catch (Exception e) {
             LOGGER.error("Failed to encrypt. Exception : " + e.getMessage());
         }
@@ -99,9 +102,8 @@ public class Encryptor {
 
     public OutputStream getOutputStreamAndEncrypt(byte[] rawEncryptionKey, OutputStream os) {
         try {
-            final Cipher cipher = Cipher.getInstance(ALGORITHM_2);
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"));
-            return new CipherOutputStream(os, cipher);
+            decryptStream.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"));
+            return new CipherOutputStream(os, decryptStream);
         } catch (Exception e) {
             LOGGER.error("Failed to decrypt. Exception : " + e.getMessage());
         }

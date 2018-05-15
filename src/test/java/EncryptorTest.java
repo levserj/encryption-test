@@ -2,7 +2,9 @@ import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -17,7 +19,7 @@ public class EncryptorTest {
     private static Encryptor encryptor;
 
     @BeforeClass
-    public static void init() throws UnsupportedEncodingException {
+    public static void init() throws UnsupportedEncodingException, NoSuchPaddingException, NoSuchAlgorithmException {
         RAW_KEY = "THEMOSTSECRETKEY".getBytes("UTF-8");
         encryptor = new Encryptor();
     }
