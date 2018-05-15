@@ -1,7 +1,8 @@
+import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,6 +27,19 @@ public class EncryptorTest {
         byte[] rowData = DATA.getBytes("UTF-8");
         byte[] encrypted = encryptor.encrypt(RAW_KEY, rowData);
         byte[] decrypted = encryptor.decrypt(RAW_KEY, encrypted);
+        assertEquals(DATA, new String(decrypted));
+    }
+
+    @Test
+    public void encryptionWithStreamsTest() throws IOException {
+        byte[] rowData = DATA.getBytes("UTF-8");
+        File tmp = File.createTempFile("tmpEncryptedByteArray", ".txt");
+        FileOutputStream fos = new FileOutputStream(tmp);
+        OutputStream encryptedOutputStream = encryptor.getOutputStreamAndEncrypt(RAW_KEY, fos);
+        encryptedOutputStream.write(rowData);
+        encryptedOutputStream.flush();
+        InputStream decryptedInputStream = encryptor.getInputStreamAndDecrypt(RAW_KEY, new FileInputStream(tmp));
+        byte[] decrypted = IOUtils.toByteArray(decryptedInputStream);
         assertEquals(DATA, new String(decrypted));
     }
 }
