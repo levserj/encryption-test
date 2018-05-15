@@ -34,14 +34,13 @@ public class EncryptorTest {
     public void encryptionWithStreamsTest() throws IOException, InterruptedException {
         byte[] rowData = DATA.getBytes("UTF-8");
         File tmp = File.createTempFile("tmpEncryptedByteArray", ".txt");
-        FileOutputStream fos = new FileOutputStream(tmp);
-        OutputStream encryptedOutputStream = encryptor.getOutputStreamAndEncrypt(RAW_KEY, fos);
+        OutputStream encryptedOutputStream = encryptor.getOutputStreamAndEncrypt(RAW_KEY, new FileOutputStream(tmp));
         encryptedOutputStream.write(rowData);
         encryptedOutputStream.flush();
         encryptedOutputStream.close();
-        FileInputStream fis = new FileInputStream(tmp);
-        InputStream decryptedInputStream = encryptor.getInputStreamAndDecrypt(RAW_KEY, fis);
+        InputStream decryptedInputStream = encryptor.getInputStreamAndDecrypt(RAW_KEY, new FileInputStream(tmp));
         byte[] decrypted = IOUtils.toByteArray(decryptedInputStream);
         assertEquals(DATA, new String(decrypted));
+        decryptedInputStream.close();
     }
 }
